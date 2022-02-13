@@ -42,5 +42,54 @@ class utilities {
     REC.children.add(F);
     return REC;
   }
-
+  String printFormula(formula F) {
+    String s = "";
+    switch(F.type) {
+    case 0:
+      // constant
+      s = str(F.value);
+      break;
+    case 1:
+      // sum (has at least 2 children)
+      s = "(" + printFormula(F.children.get(0));
+      for (int i=1; i<F.children.size(); i++) {
+        if (F.children.get(i).type == 0) {
+          s = s + "+" + printFormula(F.children.get(i));
+        } else {
+          s = s + "+(" + printFormula(F.children.get(i)) + ")";
+        }
+      }
+      s = s + ")";
+      break;
+    case 2:
+      // product (has at least 2 children)
+      s = "(" + printFormula(F.children.get(0));
+      for (int i=1; i<F.children.size(); i++) {
+        if (F.children.get(i).type == 0) {
+          s = s + "*" + printFormula(F.children.get(i));
+        } else {
+          s = s + "*(" + printFormula(F.children.get(i)) + ")";
+        }
+      }
+      s = s + ")";
+      break;
+    case 3:
+      // opposite (has only 1 child)
+      if (F.children.get(0).type == 0) {
+        s = "-" + printFormula(F.children.get(0));
+      } else {
+        s = "-(" + printFormula(F.children.get(0)) + ")";
+      }
+      break;
+    case 4:
+      // reciprocal (has only 1 child)
+      if (F.children.get(0).type == 0) {
+        s = "1/" + printFormula(F.children.get(0));
+      } else {
+        s = "1/(" + printFormula(F.children.get(0)) + ")";
+      }
+      break;
+    }
+    return s;
+  }
 }

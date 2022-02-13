@@ -15,17 +15,18 @@ void setup() {
   formula f3 = new formula();
   f3.type = 0;
   f3.value = 3;
+  f3 = U.opposite(f3);
   ArrayList<formula> formulas = new ArrayList<formula>();
   formulas.add(f1);
   formulas.add(f2);
   
   formula sum = U.sum(formulas);
   ArrayList<formula> formulas2 = new ArrayList<formula>();
-  formulas2.add(f3);
   formulas2.add(sum);
+  formulas2.add(f3);
   
-  formula sum2 = U.sum(formulas2);
+  formula prod = U.product(formulas2);
   
-  String s = U.printFormula(sum2,"");
+  String s = U.printFormula(prod);
   println(s);
 }
