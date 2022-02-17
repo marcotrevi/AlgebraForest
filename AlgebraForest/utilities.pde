@@ -3,6 +3,7 @@ class utilities {
   }
 
   boolean areEquivalent(formula F, formula G) {
+    // checks if simplified version of F-G is equal to zero
     boolean check = false;
     return check;
   }
@@ -42,6 +43,31 @@ class utilities {
     REC.children.add(F);
     return REC;
   }
+
+  formula sumToProduct(formula F) {
+    // from x+x+...+x to n*x
+    formula G = new formula();
+    return G;
+  }
+
+  formula productToPower(formula F) {
+    // from x*x*...*x to x^n
+    formula G = new formula();
+    return G;
+  }
+
+  formula distributeProduct(formula F) {
+    // from a*(x+y+z+...) to a*x+a*y+a*z+...
+    formula G = new formula();
+    return G;
+  }
+
+  formula copyFormula(formula F) {
+    formula G = new formula();
+    
+    return G;
+  }
+
   String printFormula(formula F) {
     String s = "";
     switch(F.type) {
@@ -86,7 +112,7 @@ class utilities {
       if (F.children.get(0).type == 0) {
         s = "1/" + printFormula(F.children.get(0));
       } else {
-        s = "1/(" + printFormula(F.children.get(0)) + ")";
+        s = "1/ (" + printFormula(F.children.get(0)) + ")";
       }
       break;
     }

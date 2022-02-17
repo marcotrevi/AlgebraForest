@@ -4,6 +4,7 @@
 
 constants C = new constants();
 utilities U = new utilities();
+shapes S = new shapes();
 
 void setup() {
   formula f1 = new formula();

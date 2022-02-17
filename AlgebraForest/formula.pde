@@ -5,6 +5,8 @@ class formula {
   int id = -1;
   int type = -1;
   int value = -1;
+  int lastNode = 0;
+  
   ArrayList<formula> children = new ArrayList<formula>();
 
   formula() {
