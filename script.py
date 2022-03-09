@@ -1,8 +1,7 @@
 from datetime import timedelta
 import random as r
-import sympy
+from secrets import choice
 from sympy import *
-import utilities as U
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -13,9 +12,9 @@ n = 6
 
 print('start')
 T = nx.nonisomorphic_trees(n, create="graph")
+g = list(T)
 print('stop')
 
-g = list(T)
 k = r.randint(0,len(g)-1)
 root = r.randint(0,n-1)
 G = g[k]
@@ -27,7 +26,11 @@ T = nx.bfs_tree(G,root)
 # builds a digraph (BFS tree)
 # now neighbors of a node are only children
 # dictionary comprehension
+
+
 labels = {x:x for x in T.nodes}
+# label dictionary
+nx.set_node_attributes(T, labels, name="nodeID")
 
 children = {}
 # children dictionary
@@ -39,7 +42,7 @@ nx.set_node_attributes(T, children, name="children")
 # nodes have number of children as attribute
 
 nodeType = {}
-# operation or symbol
+# operation or symbol dictionary
 for i in T.nodes:
     n_children = T.nodes[i]["children"] 
     if n_children == 0:
@@ -50,31 +53,50 @@ for i in T.nodes:
 nx.set_node_attributes(T, nodeType, name="node type")
 # nodes have node type as attribute
 
-_bfs = nx.bfs_successors(T,root)
-print(dict(_bfs))
+x = symbols("x")
 
-def treeToExpression(tree, node):
-    # converting tree into sympy expression
-    # gets a tree graph in networkx and returns a sympy expression
-    types = [Add, Mul]
-    if tree.nodes[node]["node type"] == 'L':
-        expr = symbols('x')
-        expr = UnevaluatedExpr(expr)
-    elif tree.nodes[node]["node type"] == 'OP1':
-        for j in nx.neighbors(tree,node):
-            nn = j
-        print(j)
-        expr = -UnevaluatedExpr(treeToExpression(tree, nn))
+def treeToExpr(tree, node, args):
+    children = tree.nodes[node]["children"] 
+    if children == 0:
+        # leaf node. Append leaf to list
+        args = tree.nodes[node]["nodeID"]
+    elif children == 1:
+        # unary operator. (multiplication by -1)
+        for child in nx.neighbors(tree, node):
+            args = [Mul(*flatten([treeToExpr(tree, child, args),-1]),evaluate=False)]
+        #print(args)
     else:
-        args = []
-        for i in nx.neighbors(tree, node):
-            args.append(treeToExpression(tree, i))
-        #expr = r.choice(types)(*args, evaluate=False)
-        expr = Add(*args)
-    return expr
+        # n-ary operator. (Add or Mul)
+        _args = []
+        ops = [Add,Mul]
+        for child in nx.neighbors(tree, node):
+            _args.append(treeToExpr(tree, child, args))
+            #print(_args)
+        args = [choice(ops)(*flatten(_args),evaluate=False)]
+    return args
 
-expr = treeToExpression(T, root)
+def treeToString(tree, node, string):
+    string = str(tree.nodes[node]["nodeID"])
+    children = tree.nodes[node]["children"] 
+    if children == 0:
+        # we are on a leaf node
+        print("leaf")
+    else:
+        string = string + "("
+        for child in nx.neighbors(tree, node):
+            string = string + str(treeToString(tree, child, string)) + ","
+        string = string + ")"
+    return string
+
+
+expr = treeToString(T, root, "")
 print(expr)
+
+args = treeToExpr(T, root, [])
+print(args)
+
+value = args[0].doit()
+print(value)
 
 color_map = []
 for node in T:
@@ -84,7 +106,7 @@ for node in T:
         color_map.append('blue')
 
 #labels = nodeType
-nx.draw_networkx_nodes(T, pos, node_size=1000, node_color=color_map)
+nx.draw_networkx_nodes(T, pos, node_size=500, node_color=color_map)
 nx.draw_networkx_edges(T, pos, edgelist=T.edges(), edge_color='black')
 nx.draw_networkx_labels(T, pos, labels, font_color='white')
 
