@@ -4,6 +4,7 @@ from secrets import choice
 from sympy import *
 import networkx as nx
 import matplotlib.pyplot as plt
+import itertools as tools
 
 #from random import choice, randint
 #from sympy import FunctionClass, Add, Mul, cos, sin, binomial, arity
@@ -54,7 +55,12 @@ nx.set_node_attributes(T, nodeType, name="node type")
 # nodes have node type as attribute
 
 x,y,z = symbols(["x","y","z"])
+# shown symbols
+S1, S2, S3, S4 = symbols(["S1","S2","S3","S4"])
+# symbols used for expression equality check
+
 sym = [x,y,z]
+safeSymbols = [S1,S2,S3,S4]
 num = []
 vars = sym + num
 
@@ -113,30 +119,55 @@ def switchSymbol(expr, symbol1, symbol2):
         switchExpr = expr
     return switchExpr
 
+def switchToSafeSymbols(expr,safeSyms):
+    safeExpr = expr
+    i = 0
+    oldSymbols = list(expr.free_symbols)
+    for s in oldSymbols:
+        # safeExpr needs to have safe symbols S1,S2,...,SN to avoid chaos
+        safeExpr = safeExpr.subs(s,safeSyms[i])
+        i = i+1
+    return safeExpr
+
 def areExpressionsEqual(expr1, expr2):
+    # this method checks if two expressions are equal in a structural sense
+    # they are equal if there exists a symbol permutation that makes them equal
     check = False
     symbols1 = list(expr1.free_symbols)
     symbols2 = list(expr2.free_symbols)
     if len(symbols1) == len(symbols2):
-        if symbols1 == symbols2:
-            print("ok - go with the permutations")
-            # both expressions have the same symbol set
-        else:
-            print("building same set of symbols for both expressions")
+        safeSyms = safeSymbols[0:len(symbols1)] 
+        # the two expressions have the same number of symbols (N)
+        safeExpr1 = switchToSafeSymbols(expr1,safeSyms)
+        # now safeExpr1 has safe symbols S1,S2,...,SN.
+        print(safeExpr1)
+        print("checking permutations...")
+        perms = list(tools.permutations(safeSyms))
+        for perm in perms:
+            #iterating through all permutations of symbols
+            safeSyms2 = perm
+            print(safeSyms2)
+            safeExpr2 = switchToSafeSymbols(expr2,safeSyms2)
+            print(safeExpr2)
+            # checking if permutated safeExpr2 is equal to safeExpr1
+            if (safeExpr1.expand() - safeExpr2.expand() == 0):
+                check = True
+                break
+                # exiting loop
     else:
         print("expressions have different number of symbols")
+        # check remains False
     return check
 
 print()
 
 # checking if two expressions are equal
 # expr1 = UnevaluatedExpr(x)*(UnevaluatedExpr(x)+UnevaluatedExpr(y))
-expr1 = x+y
-expr2 = y+z
+expr1 = (z+y)*x
+expr2 = z*x+y*z
 print(areExpressionsEqual(expr1, expr2))
 # print(expr1)
 # print(switchSymbol(expr1, x, z))
-
 
 color_map = []
 for node in T:
