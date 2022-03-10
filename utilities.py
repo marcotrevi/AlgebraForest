@@ -1,17 +1,15 @@
 from sympy import *
 
-def sumExpr(x,y):
-    return x+y
+x,y,z = symbols(["x","y","z"])
+_symbols = [x,y,z]
+# shown symbols
 
-def prodExpr(x,y):
-    return x*y
+S0, S1, S2, S3, S4, S5, S6, S7, S8, S9  = symbols(["S0","S1","S2","S3","S4","S5","S6","S7","S8","S9"])
+_safeSymbols = [S0,S1,S2,S3,S4,S5,S6,S7,S8,S9]
+# symbols used for expression equality check
 
-def powExpr(x,y):
-    return x**y
+x0, x1, x2, x3, x4, x5, x6, x7, x8, x9  = symbols(["x0","x1","x2","x3","x4","x5","x6","x7","x8","x9"])
+_standardSymbols = [x0,x1,x2,x3,x4,x5,x6,x7,x8,x9]
+# symbols used for expression representation only
 
-def buildExpr(type, x ,y):
-    if(type == 1):
-        return x+y
-    elif(type == 2):
-        return x*y
 

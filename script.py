@@ -5,16 +5,11 @@ from sympy import *
 import networkx as nx
 import matplotlib.pyplot as plt
 import itertools as tools
+import utilities as u
 
-#from random import choice, randint
-#from sympy import FunctionClass, Add, Mul, cos, sin, binomial, arity
-
-n = 3
-
-print('start')
+n = 8
 T = nx.nonisomorphic_trees(n, create="graph")
 g = list(T)
-print('stop')
 
 k = r.randint(0,len(g)-1)
 root = r.randint(0,n-1)
@@ -27,7 +22,6 @@ T = nx.bfs_tree(G,root)
 # builds a digraph (BFS tree)
 # now neighbors of a node are only children
 # dictionary comprehension
-
 
 labels = {x:x for x in T.nodes}
 # label dictionary
@@ -54,34 +48,22 @@ for i in T.nodes:
 nx.set_node_attributes(T, nodeType, name="node type")
 # nodes have node type as attribute
 
-x,y,z = symbols(["x","y","z"])
-# shown symbols
-S1, S2, S3, S4 = symbols(["S1","S2","S3","S4"])
-# symbols used for expression equality check
-
-sym = [x,y,z]
-safeSymbols = [S1,S2,S3,S4]
-num = []
-vars = sym + num
-
 def treeToExpr(tree, node, args):
     children = tree.nodes[node]["children"] 
     if children == 0:
         # leaf node. Append leaf to list
-        # args = tree.nodes[node]["nodeID"]
-        args = choice(vars)
+        args = choice(u._standardSymbols[0:3])
     elif children == 1:
         # unary operator. (multiplication by -1)
         for child in nx.neighbors(tree, node):
-            args = [Mul(*flatten([treeToExpr(tree, child, args),-1]),evaluate=False)]
-        #print(args)
+            args = [Pow(*flatten([treeToExpr(tree, child, args),2]),evaluate=False)]
+            #args = [Mul(*flatten([treeToExpr(tree, child, args),-1]),evaluate=False)]
     else:
         # n-ary operator. (Add or Mul)
         _args = []
         ops = [Add,Mul]
         for child in nx.neighbors(tree, node):
             _args.append(treeToExpr(tree, child, args))
-            #print(_args)
         args = [choice(ops)(*flatten(_args),evaluate=False)]
     return args
 
@@ -98,10 +80,8 @@ def treeToString(tree, node, string):
         string = string + ")"
     return string
 
-#expr = treeToString(T, root, "")
-#print(expr)
-
 args = treeToExpr(T, root, [])
+print("expression:")
 print(args)
 
 value = args[0].doit()
@@ -136,7 +116,7 @@ def areExpressionsEqual(expr1, expr2):
     symbols1 = list(expr1.free_symbols)
     symbols2 = list(expr2.free_symbols)
     if len(symbols1) == len(symbols2):
-        safeSyms = safeSymbols[0:len(symbols1)] 
+        safeSyms = u._safeSymbols[0:len(symbols1)] 
         # the two expressions have the same number of symbols (N)
         safeExpr1 = switchToSafeSymbols(expr1,safeSyms)
         # now safeExpr1 has safe symbols S1,S2,...,SN.
@@ -161,13 +141,9 @@ def areExpressionsEqual(expr1, expr2):
 
 print()
 
-# checking if two expressions are equal
-# expr1 = UnevaluatedExpr(x)*(UnevaluatedExpr(x)+UnevaluatedExpr(y))
-expr1 = (z+y)*x
-expr2 = z*x+y*z
+expr1 = (u.x1+u.y)*u.x
+expr2 = u.x1*u.x+u.y*u.x1
 print(areExpressionsEqual(expr1, expr2))
-# print(expr1)
-# print(switchSymbol(expr1, x, z))
 
 color_map = []
 for node in T:
@@ -181,5 +157,5 @@ nx.draw_networkx_nodes(T, pos, node_size=500, node_color=color_map)
 nx.draw_networkx_edges(T, pos, edgelist=T.edges(), edge_color='black')
 nx.draw_networkx_labels(T, pos, labels, font_color='white')
 
-#plt.show()
+plt.show()
 
