@@ -64,8 +64,8 @@ def buildExpression(numNodes):
 
 #expr = buildExpression(6)
 
-numNodes = 8
-showPlot = False
+numNodes = 6 
+showPlot = True
 
 treeList = list(nx.nonisomorphic_trees(numNodes, create="graph"))
 # this list contains all trees on "n" nodes

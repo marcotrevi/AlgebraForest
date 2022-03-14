@@ -95,40 +95,42 @@ def areExpressionsEqual(expr1, expr2):
 
 def treeToExpr(tree, node, args, numLeaves):
     # generates polynomial expressions
-    children = tree.nodes[node]["children"]
-    # gets number of children
-    if children == 0:
-        # leaf node. Append leaf to list
-        # !!! ------------------------------------ how to choose variables and scalars? ------------------------------------- !!!
-        # values = u._standardSymbols[0:len(leaves)-1] + u._scalars
-        tree.nodes[node]["nodeType"] = "leaf"
-        values = u._standardSymbols[0:numLeaves]
-        args = UnevaluatedExpr(choice(values))
-    elif children == 1:
-        # unary operator. (multiplication by -1)
-        for child in nx.neighbors(tree, node):
-            #args = [Mul(*flatten([treeToExpr(tree, child, args),-1]),evaluate=False)]
-            if choice([1,2]) == 1:
-                _exp = choice([0,1,2,3,4,5])
-                if _exp == 2:
-                    tree.nodes[node]["nodeType"] = "Pow2"
+    with evaluate(False):
+        children = tree.nodes[node]["children"]
+        # gets number of children
+        if children == 0:
+            # leaf node. Append leaf to list
+            # !!! ------------------------------------ how to choose variables and scalars? ------------------------------------- !!!
+            # values = u._standardSymbols[0:len(leaves)-1] + u._scalars
+            tree.nodes[node]["nodeType"] = "X"
+            values = u._standardSymbols[0:numLeaves]
+            args = UnevaluatedExpr(choice(values))
+        elif children == 1:
+            # unary operator. (multiplication by -1)
+            for child in nx.neighbors(tree, node):
+                #args = [Mul(*flatten([treeToExpr(tree, child, args),-1]),evaluate=False)]
+                if choice([1,2]) == 1:
+                    _exp = choice([0,1,2,3,4,5])
+                    if _exp == 2:
+                        tree.nodes[node]["nodeType"] = "Pow2"
+                    else:
+                        tree.nodes[node]["nodeType"] = "Pow"
+                    args = [UnevaluatedExpr(Pow(*flatten([treeToExpr(tree, child, args, numLeaves),_exp]), evaluate=False))]
                 else:
-                    tree.nodes[node]["nodeType"] = "Pow"
-                args = [UnevaluatedExpr(Pow(*flatten([treeToExpr(tree, child, args, numLeaves),_exp]), evaluate=False))]
-            else:
-                tree.nodes[node]["nodeType"] = "Opp"
-                args = [UnevaluatedExpr(Mul(*flatten([treeToExpr(tree, child, args, numLeaves),-1]), evaluate=True))]
-    else:
-        # n-ary operator. (Add or Mul)
-        _args = []
-        _op = choice([Add,Mul])
-        if _op == Mul:
-            tree.nodes[node]["nodeType"] = "Mul"
+                    with evaluate(True):
+                        tree.nodes[node]["nodeType"] = "Opp"
+                        args = [UnevaluatedExpr(Mul(*flatten([treeToExpr(tree, child, args, numLeaves),-1])))]
         else:
-            tree.nodes[node]["nodeType"] = "Add"
-        for child in nx.neighbors(tree, node):
-            _args.append(treeToExpr(tree, child, args, numLeaves))
-        args = [UnevaluatedExpr(_op(*flatten(_args)))]
+            # n-ary operator. (Add or Mul)
+            _args = []
+            _op = choice([Add,Mul])
+            if _op == Mul:
+                tree.nodes[node]["nodeType"] = "Mul"
+            else:
+                tree.nodes[node]["nodeType"] = "Add"
+            for child in nx.neighbors(tree, node):
+                _args.append(treeToExpr(tree, child, args, numLeaves))
+            args = [UnevaluatedExpr(_op(*flatten(_args)))]
     return args
 
 def append_list_as_row(file_name, list_of_elem):
