@@ -74,22 +74,23 @@ def areExpressionsEqual(expr1, expr2):
         safeSyms = u._safeSymbols[0:len(symbols1)] 
         safeExpr1 = switchToSafeSymbols(expr1,safeSyms)
         # now safeExpr1 has safe symbols S1,S2,...,SN.
-        print(safeExpr1)
-        print("checking permutations...")
+        #print(safeExpr1)
+        #print("checking permutations...")
         perms = list(tools.permutations(safeSyms))
         for perm in perms:
             #iterating through all permutations of symbols
             safeSyms2 = perm
-            print(safeSyms2)
+            #print(safeSyms2)
             safeExpr2 = switchToSafeSymbols(expr2,safeSyms2)
-            print(safeExpr2)
+            #print(safeExpr2)
             # checking if permutated safeExpr2 is equal to safeExpr1
             if (safeExpr1.expand() - safeExpr2.expand() == 0):
                 check = True
                 break
                 # exiting loop
     else:
-        print("expressions have different number of symbols")
+        check = False
+        #print("expressions have different number of symbols")
         # check remains False
     return check
 

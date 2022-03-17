@@ -12,21 +12,21 @@ class App:
         self.driver.close()
 
     def create_equivalence_relation(self, expression1, expression2):
-        # two expressions are equivalent if their difference evaluates to zero modulo permutations of the variables
+        # two expressions are equivalent if their difference = 0 modulo variable permutation
         with self.driver.session() as session:
             # Write transactions allow the driver to handle retries and transient errors
             result = session.write_transaction(
                 self._create_and_return_equivalence_relation, expression1, expression2)
-            for row in result:
-                print("expressions: {expr1}, {expr2} are equivalent".format(expr1=row['expr1'], expr2=row['expr2']))
+            #for row in result:
+            #    print("expressions: {expr1}, {expr2} are equivalent".format(expr1=row['expr1'], expr2=row['expr2']))
 
     @staticmethod
     def _create_and_return_equivalence_relation(tx, expression1, expression2):
         query = (
-            "CREATE (expr1:Expression { name: $expression1 }) "
-            "CREATE (expr2:Expression { name: $expression2 }) "
-            "CREATE (expr1)-[:EQUIVALENT]->(expr2) "
-            "CREATE (expr2)-[:EQUIVALENT]->(expr1) "
+            "MATCH (expr1:Expression { name: $expression1 }) "
+            "MATCH (expr2:Expression { name: $expression2 }) "
+            "CREATE (expr1)-[:EQUALS]->(expr2) "
+            "CREATE (expr2)-[:EQUALS]->(expr1) "
             "RETURN expr1, expr2"
         )
         result = tx.run(query, expression1=expression1, expression2=expression2)
@@ -45,8 +45,8 @@ class App:
             # Write transactions allow the driver to handle retries and transient errors
             result = session.write_transaction(
                 self._create_and_return_dependency, expr, type)
-            for row in result:
-                print("expression: {expr} is of type {node}, connection created".format(expr=row['expr'], node=row['node']))
+            #for row in result:
+            #    print("expression: {expr} is of type {node}, connection created".format(expr=row['expr'], node=row['node']))
 
     @staticmethod
     def _create_and_return_dependency(tx, exprName, type):
@@ -133,6 +133,34 @@ class App:
         result = tx.run(query, person_name=person_name)
         return [row["name"] for row in result]
 
+    def getAllExpressions(self):
+        with self.driver.session() as session:
+            result = session.read_transaction(self._returnExpressions)
+        return result
+
+    @staticmethod
+    def _returnExpressions(tx):
+        query = (
+            "MATCH (e:Expression) "
+            "RETURN e.name AS name"
+        )
+        result = tx.run(query)
+        return [row["name"] for row in result]
+
+    def checkIfLinked(self, expr1Name, expr2Name):
+        with self.driver.session() as session:
+            result = session.read_transaction(self._returnEquivalentRelationships, expr1Name, expr2Name)
+        return result
+
+    @staticmethod
+    def _returnEquivalentRelationships(tx, expr1Name, expr2Name):
+        query = (
+            "MATCH (expr1:Expression)-[r:EQUALS]->(expr2:Expression)"
+            "WHERE (expr1.name=$expr1Name) AND (expr2.name=$expr2Name)"
+            "RETURN r"
+        )
+        result = tx.run(query,expr1Name=expr1Name,expr2Name=expr2Name)
+        return [row for row in result]
 
 if __name__ == "__main__":
     # Aura queries use an encrypted connection using the "neo4j+s" URI scheme
@@ -144,5 +172,7 @@ if __name__ == "__main__":
 #    app.createExpressionNode("a+b")
 #    app.create_dependency("x**2","POW")
 #    app.create_equivalence_relation("A", "B")
+#    r = app.checkIfLinked("A","B")
+#    print(len(r))
 #    app.find_person("Alice")
     app.close()

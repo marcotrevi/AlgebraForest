@@ -116,34 +116,33 @@ if showPlot:
 #row = [latex(args[0]), u.exprLength(args[0])]
 #u.append_list_as_row('formulaDB.csv', row)
 
-results = buildExpression(5)
+results = buildExpression(8)
 # builds an expression for every n-node tree
 exprList = results[0]
 treeList = results[1]
 rootList = results[2]
 L = len(exprList)
+
 #print(normExprList)
 #print(treeList)
 #print(rootList)
 
-doneExpr = exprList[0].doit()
-print(exprList[0])
-print(doneExpr)
+_init = False
+writeToGraph = True
 
+uri = "neo4j+s://cb231e56.databases.neo4j.io"
+user = "neo4j"
+password = "5631ZHUiFDJ1kLH96wfoVdCzdF4kAqKCwPiXgFwucKI"
+app = neo.App(uri, user, password)
 
-writeToGraph = False
-_init = True
+if _init:
+    app.createOperationNode("ADD")
+    app.createOperationNode("MUL")
+    app.createOperationNode("POW")
+    app.createOperationNode("OPP")
+    app.createOperationNode("SQUARE_DIFF")
+
 if writeToGraph:
-    uri = "neo4j+s://cb231e56.databases.neo4j.io"
-    user = "neo4j"
-    password = "5631ZHUiFDJ1kLH96wfoVdCzdF4kAqKCwPiXgFwucKI"
-    app = neo.App(uri, user, password)
-    if _init:
-        app.createOperationNode("ADD")
-        app.createOperationNode("MUL")
-        app.createOperationNode("POW")
-        app.createOperationNode("OPP")
-        app.createOperationNode("SQUARE_DIFF")
     i = 0
     for normExpr in exprList:
         remainder = L-i
@@ -152,6 +151,7 @@ if writeToGraph:
         T = treeList[i]
         root = rootList[i]
         app.createExpressionNode(expr)
+        # creates expression node 
         if u.isMul(T,root):
             app.create_dependency(expr,"MUL")    
         elif u.isDifferenceOfSquares(T,root):
@@ -163,4 +163,16 @@ if writeToGraph:
         elif u.isOpp(T,root):
             app.create_dependency(expr,"OPP")
         i = i+1
-    app.close()
+
+allExpressions = app.getAllExpressions()
+ll = len(allExpressions)
+ll = ll*L
+for e in exprList:
+    expr1 = str(e)
+    for expr2 in allExpressions:
+        ll = ll - 1
+        print(ll)
+        if len(app.checkIfLinked(expr1,expr2))==0 and (simplify(sympify(expr1).doit() - sympify(expr2).doit())) == 0 and (expr1 != expr2):
+            app.create_equivalence_relation(expr1, expr2)
+            print("found equivalent expressions")
+app.close()
