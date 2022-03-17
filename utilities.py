@@ -70,8 +70,8 @@ def areExpressionsEqual(expr1, expr2):
     symbols1 = list(expr1.free_symbols)
     symbols2 = list(expr2.free_symbols)
     if len(symbols1) == len(symbols2):
-        safeSyms = u._safeSymbols[0:len(symbols1)] 
         # the two expressions have the same number of symbols (N)
+        safeSyms = u._safeSymbols[0:len(symbols1)] 
         safeExpr1 = switchToSafeSymbols(expr1,safeSyms)
         # now safeExpr1 has safe symbols S1,S2,...,SN.
         print(safeExpr1)

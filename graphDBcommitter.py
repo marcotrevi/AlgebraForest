@@ -67,36 +67,6 @@ class App:
                 query=query, exception=exception))
             raise
 
-    def create_friendship(self, person1_name, person2_name):
-        with self.driver.session() as session:
-            # Write transactions allow the driver to handle retries and transient errors
-            result = session.write_transaction(
-                self._create_and_return_friendship, person1_name, person2_name)
-            for row in result:
-                print("Created friendship between: {p1}, {p2}".format(p1=row['per1'], p2=row['p2']))
-
-    @staticmethod
-    def _create_and_return_friendship(tx, person1_name, person2_name):
-        # To learn more about the Cypher syntax, see https://neo4j.com/docs/cypher-manual/current/
-        # The Reference Card is also a good resource for keywords https://neo4j.com/docs/cypher-refcard/current/
-        query = (
-            "CREATE (per1:Person { name: $person1_name }) "
-            "CREATE (p2:Person { name: $person2_name }) "
-            "CREATE (per1)-[:KNOWS]->(p2) "
-            "CREATE (per1)<-[:KNOWS]-(p2) "
-            "RETURN per1, p2"
-        )
-        result = tx.run(query, person1_name=person1_name, person2_name=person2_name)
-        # "tx" is a transaction
-        try:
-            return [{"per1": row["per1"]["name"], "p2": row["p2"]["name"]}
-                    for row in result]
-        # Capture any errors along with the query and data for traceability
-        except ServiceUnavailable as exception:
-            logging.error("{query} raised an error: \n {exception}".format(
-                query=query, exception=exception))
-            raise
-
     def createOperationNode(self, nodeType):
         with self.driver.session() as session:
             # Write transactions allow the driver to handle retries and transient errors
@@ -170,7 +140,6 @@ if __name__ == "__main__":
     user = "neo4j"
     password = "5631ZHUiFDJ1kLH96wfoVdCzdF4kAqKCwPiXgFwucKI"
     app = App(uri, user, password)
-#    app.create_friendship("E","F")
 #    app.createOperationNode("POW")
 #    app.createExpressionNode("a+b")
 #    app.create_dependency("x**2","POW")

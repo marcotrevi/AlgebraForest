@@ -49,7 +49,7 @@ def buildExpression(numNodes):
         nx.set_node_attributes(T, nodeType, name="node type")
         # nodes have node type as attribute 
 
-        args = u.treeToExpr(T, root, [], len(leaves))
+        args = u.normalizedExpr(u.treeToExpr(T, root, [], len(leaves))[0])
         expressions.append(args)
         trees.append(T)
         roots.append(root)
@@ -116,17 +116,19 @@ if showPlot:
 #row = [latex(args[0]), u.exprLength(args[0])]
 #u.append_list_as_row('formulaDB.csv', row)
 
-results = buildExpression(9)
-exprList = flatten(results[0])
+results = buildExpression(5)
+# builds an expression for every n-node tree
+exprList = results[0]
 treeList = results[1]
 rootList = results[2]
 L = len(exprList)
-normExprList = []
-for expr in exprList:
-    normExprList.append(u.normalizedExpr(expr))
 #print(normExprList)
 #print(treeList)
 #print(rootList)
+
+doneExpr = exprList[0].doit()
+print(exprList[0])
+print(doneExpr)
 
 
 writeToGraph = False
@@ -143,7 +145,7 @@ if writeToGraph:
         app.createOperationNode("OPP")
         app.createOperationNode("SQUARE_DIFF")
     i = 0
-    for normExpr in normExprList:
+    for normExpr in exprList:
         remainder = L-i
         print("trees to go: "+str(remainder))
         expr = str(normExpr)
