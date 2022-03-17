@@ -160,12 +160,30 @@ def isSquare(tree, root):
         check = True
     return check
 
+def isMul(tree, root):
+    check = False
+    if tree.nodes[root]["nodeType"] == "Mul":
+        check = True
+    return check
+
+def isAdd(tree, root):
+    check = False
+    if tree.nodes[root]["nodeType"] == "Add":
+        check = True
+    return check
+
+def isOpp(tree, root):
+    check = False
+    if tree.nodes[root]["nodeType"] == "Opp":
+        check = True
+    return check
+
 def isDifferenceOfSquares(tree, root):
     check = False
     if tree.nodes[root]["children"] == 2:
         if tree.nodes[root]["nodeType"] == "Add":
+            check = True
             for child in nx.neighbors(tree, root):
-                check = True
                 if isPower(tree, child) == False:
                     check = False
     return check
