@@ -1,3 +1,4 @@
+from unicodedata import name
 from neo4j import GraphDatabase
 import logging
 from neo4j.exceptions import ServiceUnavailable
@@ -59,8 +60,7 @@ class App:
         result = tx.run(query, exprName=exprName, type=type)
         # "tx" is a transaction
         try:
-            return [{"expr": row["expr"]["name"], "node": row["node"]["type"]}
-                    for row in result]
+            return [{"expr": row["expr"]["name"], "node": row["node"]["type"]} for row in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
             logging.error("{query} raised an error: \n {exception}".format(
@@ -84,38 +84,51 @@ class App:
         result = tx.run(query, nodeType=nodeType)
         # "tx" is a transaction
         try:
-            return [{"node": row["node"]["type"]}
-                    for row in result]
+            return [{"node": row["node"]["type"]} for row in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
             logging.error("{query} raised an error: \n {exception}".format(
                 query=query, exception=exception))
             raise
 
-    def createExpressionNode(self, exprName):
+    def createExpressionNode(self, exprName, stdExprName):
         with self.driver.session() as session:
             # Write transactions allow the driver to handle retries and transient errors
             result = session.write_transaction(
-                self._create_and_return_ExpressionNode, exprName)
+                self._create_and_return_ExpressionNode, exprName, stdExprName)
             #for row in result:
             #    print("expression: {exprName} created".format(exprName=row['expr']))
 
     @staticmethod
-    def _create_and_return_ExpressionNode(tx, exprName):
+    def _create_and_return_ExpressionNode(tx, exprName, stdExprName):
         query = (
-            "CREATE (expr:Expression { name: $exprName }) "
+            "CREATE (expr:Expression { name: $exprName, stdName: $stdExprName }) "
             "RETURN expr"
         )
-        result = tx.run(query, exprName=exprName)
+        result = tx.run(query, exprName=exprName, stdExprName=stdExprName)
         # "tx" is a transaction
         try:
-            return [{"expr": row["expr"]["name"]}
-                    for row in result]
+            return [{"expr": row["expr"]["name"], "expr": row["expr"]["stdName"]} for row in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
             logging.error("{query} raised an error: \n {exception}".format(
                 query=query, exception=exception))
             raise
+
+    def createBatchExpressionNode(self, batch):
+        with self.driver.session() as session:
+            # Write transactions allow the driver to handle retries and transient errors
+            session.write_transaction(self._create_and_return_BatchExpressionNode, batch)
+
+    @staticmethod
+    def _create_and_return_BatchExpressionNode(tx, batch):
+        query = (
+            "WITH $batch AS batch "
+            "UNWIND  batch AS singleExpression "
+            "CREATE (expr:Expression) "
+            "SET expr += singleExpression;"
+            )
+        tx.run(query, batch=batch)
 
     def find_person(self, person_name):
         with self.driver.session() as session:
@@ -169,7 +182,6 @@ if __name__ == "__main__":
     password = "5631ZHUiFDJ1kLH96wfoVdCzdF4kAqKCwPiXgFwucKI"
     app = App(uri, user, password)
 #    app.createOperationNode("POW")
-#    app.createExpressionNode("a+b")
 #    app.create_dependency("x**2","POW")
 #    app.create_equivalence_relation("A", "B")
 #    r = app.checkIfLinked("A","B")

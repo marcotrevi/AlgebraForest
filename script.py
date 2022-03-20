@@ -113,22 +113,28 @@ if showPlot:
     nx.draw_networkx_labels(T, pos, nodeType, font_color='white')
     plt.show()
 
-#row = [latex(args[0]), u.exprLength(args[0])]
+#row = [latex(args[0]), u.exprLength(args[0])
 #u.append_list_as_row('formulaDB.csv', row)
 
-results = buildExpression(8)
+results = buildExpression(7)
 # builds an expression for every n-node tree
 exprList = results[0]
 treeList = results[1]
 rootList = results[2]
 L = len(exprList)
+batch = []
+for expr in exprList:
+    d = {"name": str(expr)}
+    batch.append(d)
 
 #print(normExprList)
 #print(treeList)
 #print(rootList)
 
 _init = False
-writeToGraph = True
+_writeToGraph = False
+_check = False
+_batchCreate = True
 
 uri = "neo4j+s://cb231e56.databases.neo4j.io"
 user = "neo4j"
@@ -142,15 +148,19 @@ if _init:
     app.createOperationNode("OPP")
     app.createOperationNode("SQUARE_DIFF")
 
-if writeToGraph:
+if _batchCreate:
+    app.createBatchExpressionNode(batch)
+
+if _writeToGraph:
     i = 0
     for normExpr in exprList:
         remainder = L-i
         print("trees to go: "+str(remainder))
         expr = str(normExpr)
+        stdExpr = str(sympify(normExpr).doit())
         T = treeList[i]
         root = rootList[i]
-        app.createExpressionNode(expr)
+        app.createExpressionNode(expr, stdExpr)
         # creates expression node 
         if u.isMul(T,root):
             app.create_dependency(expr,"MUL")    
@@ -164,15 +174,16 @@ if writeToGraph:
             app.create_dependency(expr,"OPP")
         i = i+1
 
-allExpressions = app.getAllExpressions()
-ll = len(allExpressions)
-ll = ll*L
-for e in exprList:
-    expr1 = str(e)
-    for expr2 in allExpressions:
-        ll = ll - 1
-        print(ll)
-        if len(app.checkIfLinked(expr1,expr2))==0 and (simplify(sympify(expr1).doit() - sympify(expr2).doit())) == 0 and (expr1 != expr2):
-            app.create_equivalence_relation(expr1, expr2)
-            print("found equivalent expressions")
+if _check:
+    allExpressions = app.getAllExpressions()
+    ll = len(allExpressions)
+    ll = ll*L
+    for e in exprList:
+        expr1 = str(e)
+        for expr2 in allExpressions:
+            ll = ll - 1
+            print(ll)
+            if len(app.checkIfLinked(expr1,expr2))==0 and (simplify(sympify(expr1).doit() - sympify(expr2).doit())) == 0 and (expr1 != expr2):
+                app.create_equivalence_relation(expr1, expr2)
+                print("found equivalent expressions")
 app.close()
